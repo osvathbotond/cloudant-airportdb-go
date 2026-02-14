@@ -8,7 +8,7 @@ The only external dependency is the [cloudant-go-sdk](https://github.com/IBM/clo
 ## Build and running the application
 You can build the application using the following command:
 ```bash
-go build -o hubfinder cmd/hubfinder/main.go
+go build -o hubfinder ./cmd/hubfinder
 ```
 Then you can run the application:
 ```bash
@@ -17,7 +17,7 @@ Then you can run the application:
 ## Running the application directly with `go run`
 Alternatively, you can run the application directly without building it first:
 ```bash
-go run cmd/hubfinder/main.go
+go run ./cmd/hubfinder
 ```
 
 # Testing
