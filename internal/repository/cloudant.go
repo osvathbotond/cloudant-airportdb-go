@@ -9,6 +9,8 @@ import (
 	"github.com/osvathbotond/cloudant-airportdb-go/internal/model"
 )
 
+const pageSize = 200
+
 // Compile-time check that CloudantRepository implements Repository.
 var _ Repository = (*CloudantRepository)(nil)
 
@@ -60,19 +62,20 @@ func buildSearchQuery(minLat, maxLat, minLon, maxLon float64) string {
 func (r *CloudantRepository) GetByBounds(ctx context.Context, minLat, maxLat, minLon, maxLon float64) ([]model.Hub, error) {
 	query := buildSearchQuery(minLat, maxLat, minLon, maxLon)
 
-	var allHubs []model.Hub
-	var bookmark *string
-	skippedRows := 0
+	allHubs := make([]model.Hub, 0, pageSize)
+
+	options := &cloudantv1.PostSearchOptions{
+		Db:    new(r.db),
+		Ddoc:  new(r.ddoc),
+		Index: new(r.index),
+		Query: new(query),
+		Limit: core.Int64Ptr(pageSize),
+	}
+
+	var currentBookmark *string
 
 	for {
-		options := &cloudantv1.PostSearchOptions{
-			Db:       core.StringPtr(r.db),
-			Ddoc:     core.StringPtr(r.ddoc),
-			Index:    core.StringPtr(r.index),
-			Query:    core.StringPtr(query),
-			Limit:    core.Int64Ptr(200),
-			Bookmark: bookmark,
-		}
+		options.Bookmark = currentBookmark
 
 		result, _, err := r.service.PostSearchWithContext(ctx, options)
 		if err != nil {
@@ -82,7 +85,6 @@ func (r *CloudantRepository) GetByBounds(ctx context.Context, minLat, maxLat, mi
 		if result.Rows != nil {
 			for _, row := range result.Rows {
 				if row.ID == nil || row.Fields == nil {
-					skippedRows++
 					continue
 				}
 
@@ -97,17 +99,19 @@ func (r *CloudantRepository) GetByBounds(ctx context.Context, minLat, maxLat, mi
 						Lon:  lon,
 						Name: name,
 					})
-				} else {
-					skippedRows++
 				}
 			}
 		}
 
-		if result.Bookmark == nil || *result.Bookmark == "" || len(result.Rows) == 0 {
+		if result.Bookmark == nil || *result.Bookmark == "" {
 			break
 		}
 
-		bookmark = result.Bookmark
+		if currentBookmark != nil && *result.Bookmark == *currentBookmark {
+			break
+		}
+
+		currentBookmark = result.Bookmark
 	}
 
 	return allHubs, nil
