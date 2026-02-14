@@ -3,14 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/IBM/cloudant-go-sdk/cloudantv1"
 	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/osvathbotond/cloudant-airportdb-go/internal/model"
 )
-
-const maxPaginatedResults = 10000
 
 // Compile-time check that CloudantRepository implements Repository.
 var _ Repository = (*CloudantRepository)(nil)
@@ -110,16 +107,7 @@ func (r *CloudantRepository) GetByBounds(ctx context.Context, minLat, maxLat, mi
 			break
 		}
 
-		if len(allHubs) >= maxPaginatedResults {
-			log.Printf("warning: reached maximum result limit (%d), narrowing your search radius may yield more accurate results", maxPaginatedResults)
-			break
-		}
-
 		bookmark = result.Bookmark
-	}
-
-	if skippedRows > 0 {
-		log.Printf("warning: skipped %d rows due to missing or invalid fields", skippedRows)
 	}
 
 	return allHubs, nil
