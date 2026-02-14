@@ -23,7 +23,7 @@ go run ./cmd/hubfinder
 # Testing
 The application includes unit tests for the distance calculations and the hub finding logic. You can run the tests using the following command:
 ```bash
-go test ./...
+go test './...'
 ```
 
 To ensure the system was tested against a diverse range of inputs and edge cases, a portion of the test data was synthesized using AI. These cases were manually reviewed, verified for accuracy against expected outcomes, and adjusted to guarantee validity.
