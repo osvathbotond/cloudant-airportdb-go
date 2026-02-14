@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"text/tabwriter"
 
 	"github.com/osvathbotond/cloudant-airportdb-go/internal/finder"
 	"github.com/osvathbotond/cloudant-airportdb-go/internal/repository"
@@ -54,12 +55,16 @@ func run() error {
 	}
 
 	fmt.Printf("\nFound %d transport hub(s):\n\n", len(hubs))
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "Name\tDistance (km)\tLatitude\tLongitude")
+	fmt.Fprintln(w, "----\t-------------\t--------\t---------")
+
 	for _, hub := range hubs {
-		fmt.Printf("Hub: %s\n", hub.Name)
-		fmt.Printf("  Distance: %.2f km\n", hub.DistanceKm)
-		fmt.Printf("  Latitude: %.6f\n", hub.Lat)
-		fmt.Printf("  Longitude: %.6f\n\n", hub.Lon)
+		fmt.Fprintf(w, "%s\t%.2f\t%.6f\t%.6f\n", hub.Name, hub.DistanceKm, hub.Lat, hub.Lon)
 	}
+
+	w.Flush()
 
 	return nil
 }
